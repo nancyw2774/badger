@@ -29,32 +29,53 @@
       </div>
     </div>
   
+    <script type="text/javascript">
+        function initApp() {
+    
+        // Listening for auth state changes.
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (user) {
+            // User is signed in.
+            var email = user.email;
+            console.log("logged in: " + email);
+          } else {
+            // User is signed out.
+            console.log("logged out");
+          }
+        });
+        }
+    
+        window.onload = function() {
+        initApp();
+        };
+      </script>
+
     <div class="creation-forms">
         <div class="event-creation">
           <form class="create-event">
             <div class="form-title">Badge Creation</div>
             <div>
-              <label class="form-label" for="name">Name</label>
+              <label class="form-label" for="name" id="badge-name">Name</label>
               <input class="form-control form-text-field" type="text" placeholder="Ex. SheHacks VI Demo-er">
             </div>
             <div>
-                <label class="form-label" for="symbol">Symbol</label>
+                <label class="form-label" for="symbol" id="symbol">Symbol</label>
                 <input class="form-control form-text-field" type="text" placeholder="Ex. SH6D">
             </div>
             <div>
-                <label class="form-label" for="form-file">Image</label>
+                <label class="form-label" for="form-file" id="image">Image</label>
                 <input class="form-control upload-image" type="file" id="formFile">
             </div>
             <div>
-                <label class="form-label" for="description">Description</label>
+                <label class="form-label" for="description" id="badge-description">Description</label>
                 <textarea class="form-control form-text-field" rows="5" id="desc"></textarea>
             </div>
             <div>
-                <label class="form-label" for="association">Association</label>
+                <label class="form-label" for="association" id="association">Association</label>
                 <input class="form-control form-text-field" type="text" placeholder="Ex. WITS">
             </div>
             <div>
-                <label class="form-label" for="name">Supply</label>
+                <label class="form-label" for="name" id="supply">Supply</label>
                 <input class="form-control form-text-field" type="text" placeholder="Ex. 600">
             </div>
             <input class="btn submit-btn" type="submit" value="Submit">

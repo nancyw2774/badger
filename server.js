@@ -208,7 +208,6 @@ async function getAccountBalance(accountId, tokenId) {
     return balance
 }
 
-/*
 async function main() {
     dbClient = await createDbClient();
     // console.log(dbClient);
@@ -239,4 +238,4 @@ async function main() {
 }
 
 
-main();*/
+main();
