@@ -44,8 +44,7 @@ body {
   padding: 10px 25px 10px 25px;
   border: none;
   border-radius: 7px;
-  margin: 10px;
-  margin-left: 0px;
+  margin: 10px 0px 25px 0px;
 }
 
 .header {
@@ -172,7 +171,7 @@ display: block;
   width:95%;
   height:535px;
   border-radius: 10px;
-  padding: 10px;
+  /* padding: 10px; */
   background-color: #AA4465;
   align-items: center;
   text-align: center;
@@ -187,6 +186,7 @@ display: block;
   padding: 10px;
   background-color: #AA4465;
   overflow-y: scroll;
+  margin: 10px 0px 25px 0px;
 }
 
 .event {
@@ -211,6 +211,10 @@ display: block;
 
 .upload-image {
   margin-bottom: 10px;
+}
+
+.description-text {
+  font-size: 18px;
 }
 
 #go-to-link {
