@@ -9,11 +9,6 @@ const app = express();
 const port = 3000
 const { v4: uuidv4 } = require("uuid");
 
-// configure express to user body-parser as middleware
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: false}));
-app.use(bodyParser.json());
-
 //db functions
 const createDbClient = require("./db.js").createDbClient;
 const addBadge = require("./db.js").addBadge;
@@ -42,13 +37,19 @@ const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
 const operatorKey = PrivateKey.fromString(process.env.OPERATOR_PV_KEY);
 const treasuryId = AccountId.fromString(process.env.TREASURY_ID);
 const treasuryKey = PrivateKey.fromString(process.env.TREASURY_PV_KEY);
-const testId = AccountId.fromString(process.env.TEST_ID);
-const testKey = PrivateKey.fromString(process.env.TEST_KEY);
 const supplyKey = PrivateKey.generate();
 
 const hederaClient = Client.forTestnet().setOperator(operatorId, operatorKey);
+var dbClient;
 
-const dbClient = await createDbClient();
+// configure express to user body-parser as middleware
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false}));
+app.use(bodyParser.json());
+
+app.on('listening', async () => {
+    dbClient = createDbClient();
+});
 
 router.post('/create-user', async (req, res) => {
     // get request body fields
@@ -74,9 +75,9 @@ router.post('/create-badge', async (req, res) => {
     const tokenId = await createBadge(name, symbol, max);
 
     //store badge in db
-    var userVals = [uuidv4(), tokenId, symbol, name];
-    console.log("add token...");
-    await retryTxn(0, 15, dbClient, addBadge, userVals);
+    console.log("add badge...");
+    var badgeVals = [uuidv4(), tokenId.toString(), symbol];
+    await retryTxn(0, 15, dbClient, addBadge, badgeVals);
 
     res.status(200)
     res.send('created badge')
@@ -85,37 +86,31 @@ router.post('/create-badge', async (req, res) => {
 router.post('/assign-badge', async (req, res) => {
     // get request body fields
     const CID = req.body.cid;
-    const tokenId = TokenId.fromtString(req.body.tokenId);
+    const tokenId = TokenId.fromString(req.body.tokenId);
     const txAccountName = req.body.username;
 
     //get user details from db
     console.log("get user...");
     const rows = await retryTxn(0, 15, dbClient, getUser, [txAccountName]);
-    const txAccountId = TokenId.fromtString(rows[0].account_id);
-    const txAccountKey = TokenId.fromtString(rows[0].account_key);
+    const txAccountId = AccountId.fromString(rows[0].account_id);
+    const txAccountKey = PrivateKey.fromString(rows[0].account_key);
     const accountBadges = rows[0].badges;
 
-    //check account balances before transaction
-    var accountPreBalance = getAccountBalance(txAccountId, tokenId)
-    var treasuryPreBalance = getAccountBalance(treasuryId, tokenId)
+    try {
+        //assign badge to user
+        await mintBadge(CID, tokenId);
+        await assignBadge(txAccountId,txAccountKey,tokenId)
 
-    //assign badge to user
-    await mintBadge(CID, tokenId);
-    await assignBadge(txAccountId,txAccountKey,tokenId)
-
-    //check account balances after transaction
-    var accountPostBalance = getAccountBalance(txAccountId, tokenId)
-    var treasuryPostBalance = getAccountBalance(treasuryId, tokenId)
-
-    if (accountPostBalance == (accountPreBalance + 1) && treasuryPostBalance == (treasuryPreBalance - 1)){
         //add new badge to user
         console.log("update badges...");
-        accountBadges.push(tokenId);
+        accountBadges.push(tokenId.toString());
         await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, txAccountName]);
 
         res.status(200)
         res.send('assigned badge')
-    } else {
+    }
+    catch (err){
+        console.log(err)
         res.status(500)
         res.send('ERR: unable to assign badge')
     }
@@ -200,7 +195,7 @@ async function assignBadge(txAccountId,txAccountKey,tokenId) {
 
     // Check treasury account and txAccount balance
     let treasuryBal = await getAccountBalance(treasuryId, tokenId);
-    let txAccBal = await getAccountBalance(testId, tokenId);
+    let txAccBal = await getAccountBalance(txAccountId, tokenId);
     console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
     console.log(`TxAccount Balance: ${txAccBal} NFTs of ID ${tokenId}\n`);
 }
@@ -213,10 +208,35 @@ async function getAccountBalance(accountId, tokenId) {
     return balance
 }
 
+/*
 async function main() {
-    let tId = await createBadge("Muffin Badge", "MB", 50);
-    mintBadge(["Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA"], tId);
-    assignBadge(testId, testKey, tId);
+    dbClient = await createDbClient();
+    // console.log(dbClient);
+    const name = "jane doe"
+    const symbol = "MB"
+    const cid = "Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA";
+
+    console.log("create badge")
+    const tId = await createBadge("Muffin Badge", symbol, 50);
+
+    //store badge in db
+    var badgeVals = [uuidv4(), tId.toString(), symbol];
+    await retryTxn(0, 15, dbClient, addBadge, badgeVals);
+
+    //get user details from db
+    const rows = await retryTxn(0, 15, dbClient, getUser, [name]);
+    const txAccountId = AccountId.fromString(rows[0].account_id);
+    const txAccountKey = PrivateKey.fromString(rows[0].account_key);
+    const accountBadges = rows[0].badges;
+    
+    //mint and assign badge
+    mintBadge([cid], tId);
+    assignBadge(txAccountId, txAccountKey, tId);
+
+    //add new badge to user
+    accountBadges.push(tId.toString());
+    await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, name]);
 }
 
-main();
+
+main();*/
