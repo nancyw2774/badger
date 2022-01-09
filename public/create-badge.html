@@ -31,31 +31,31 @@
   
     <div class="creation-forms">
         <div class="event-creation">
-          <form class="create-event" action = "/testDB2">
+          <form class="create-event" method="POST" action = "/create-badge">
             <div class="form-title">Badge Creation</div>
             <div>
               <label class="form-label" for="name" id="badge-name" name="badgeName">Name</label>
-              <input class="form-control form-text-field" type="text" placeholder="Ex. SheHacks VI Demo-er">
+              <input class="form-control form-text-field" type="text" name="name" placeholder="Ex. SheHacks VI Demo-er">
             </div>
             <div>
                 <label class="form-label" for="symbol" id="symbol">Symbol</label>
-                <input class="form-control form-text-field" type="text" placeholder="Ex. SH6D">
+                <input class="form-control form-text-field" type="text" name="symbol" placeholder="Ex. SH6D">
             </div>
             <div>
                 <label class="form-label" for="form-file" id="image">Image</label>
-                <input class="form-control upload-image" type="file" id="formFile">
+                <input class="form-control upload-image" type="file" name="image" id="formFile">
             </div>
             <div>
                 <label class="form-label" for="description" id="badge-description">Description</label>
-                <textarea class="form-control form-text-field" rows="5" id="desc"></textarea>
+                <textarea class="form-control form-text-field" rows="5" name="description" id="desc"></textarea>
             </div>
             <div>
                 <label class="form-label" for="association" id="association">Association</label>
-                <input class="form-control form-text-field" type="text" placeholder="Ex. WITS">
+                <input class="form-control form-text-field" type="text" name="association" placeholder="Ex. WITS">
             </div>
             <div>
                 <label class="form-label" for="name" id="supply">Supply</label>
-                <input class="form-control form-text-field" type="text" placeholder="Ex. 600">
+                <input class="form-control form-text-field" type="text" name="max" placeholder="Ex. 600">
             </div>
             <input class="btn submit-btn" type="submit" value="Submit">
             <a id="go-to-link" href="create-event.html">Back to event creation</a>

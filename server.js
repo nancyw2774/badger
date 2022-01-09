@@ -44,7 +44,7 @@ var dbClient;
 
 // configure express to user body-parser as middleware
 app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: false}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
@@ -81,13 +81,20 @@ app.get('/testDB', (req,res)=>{
     // accountBadges.push(tId.toString());
     // retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, name]);
 
+    console.log(req);
     console.log(`working`);
+    res.status(200);
+    res.send();
     // console.log(`${badgeName}`);
 });
 
-app.get('/testDB2', (req,res)=>{
-    let badgeName = req.body.badgeName;
-    console.log(`${badgeName}`);
+app.post('/testDB2', (req,res)=>{
+    // let badgeName = req.body.badgeName;
+    // console.log(`${badgeName}`);
+    console.log(req.body);
+    console.log(`working`);
+    res.status(200);
+    res.send();
     //gatherBadgeInfo();
 });
 
@@ -106,7 +113,9 @@ router.post('/create-user', async (req, res) => {
     res.send('added user')
 })
 
-router.post('/create-badge', async (req, res) => {
+app.post('/create-badge', async (req, res) => {
+    dbClient = await createDbClient();
+    console.log(req.body);
     // get request body fields
     const name = req.body.name;
     const symbol = req.body.symbol;
