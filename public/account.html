@@ -2,8 +2,12 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="index.css">
     <link href='https://fonts.googleapis.com/css?family=Sen' rel='stylesheet'>
+    <title>Badger</title>
 </head>
 <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 <script src="/index.js"></script>
@@ -24,52 +28,95 @@
     <div class="account">
         ACCOUNT DASHBOARD
         <div>
-            <button class="button-event"> + ADD AN EVENT</button>
+            <button class="button-event" onclick="location.href='create-event.html'"> + ADD AN EVENT</button>
         </div>
         <div class="account-content">
             <div class="content-left">
                 UPCOMING EVENTS
                 <div class="event-block">
-                    <div class = "event description-text">
-                        <h2>SheHacks VI</h2>
-                        <p>Start: January 7, 2022 at 8:00 pm</p>
-                        <p>End: January 9, 2022 at 6:00 pm </p>
+                    <div class="event description-text">
+                        <div class="eLeft">
+                            <h2>SheHacks VI</h2>
+                            <p>Start: January 7, 2022 at 8:00 pm</p>
+                            <p>End: January 9, 2022 at 6:00 pm </p>
+                        </div>
+                        <div class="eRight">
+                            <button class="to-event-btn" onclick="location.href='/event.html'"><i
+                                    class="arrow rightA"></i></button>
+                        </div>
                     </div>
-                    <div class = "event description-text">
-                        <h2>SheHacks VII</h2>
-                        <p>Start: January 8, 2023 at 8:00 pm</p>
-                        <p>End: January 10, 2023 at 6:00 pm </p>
+
+                    <div class="event description-text">
+                        <div class="eLeft">
+                            <h2>SheHacks VII</h2>
+                            <p>Start: January 8, 2023 at 8:00 pm</p>
+                            <p>End: January 10, 2023 at 6:00 pm </p>
+                        </div>
+
+                        <div class="eRight">
+                            <button class="to-event-btn" onclick="location.href='/event.html'"><i
+                                    class="arrow rightA"></i></button>
+                        </div>
                     </div>
-                    <div class = "event description-text">
-                        <h2>SheHacks VIII</h2>
-                        <p>Start: January 9, 2024 at 8:00 pm</p>
-                        <p>End: January 11, 2024 at 6:00 pm </p>
+                    <div class="event description-text">
+                        <div class="eLeft">
+                            <h2>SheHacks VIII</h2>
+                            <p>Start: January 9, 2024 at 8:00 pm</p>
+                            <p>End: January 11, 2024 at 6:00 pm </p>
+                        </div>
+                        <div class="eRight">
+                            <button class="to-event-btn" onclick="location.href='/event.html'"><i
+                                    class="arrow rightA"></i></button>
+                        </div>
                     </div>
                 </div>
                 PAST EVENTS
                 <div class="event-block">
-                    <div class = "event description-text">
-                        <h2>Intro to Networking Workshop</h2>
-                        <p>Start: October 26, 2021 at 7:00 pm</p>
-                        <p>End: October 26, 2021 at 8:30 pm </p>
+                    <div class="event description-text">
+                        <div class="eLeft">
+                            <h2>Intro to Networking Workshop</h2>
+                            <p>Start: October 26, 2021 at 7:00 pm</p>
+                            <p>End: October 26, 2021 at 8:30 pm </p>
+                        </div>
+                        <div class="eRight">
+                            <button class="to-event-btn" onclick="location.href='/event.html'"><i
+                                    class="arrow rightA"></i></button>
+                        </div>
                     </div>
-                    <div class = "event description-text">
-                        <h2>SheHacks V</h2>
-                        <p>Start: January 6, 2021 at 8:00 pm</p>
-                        <p>End: January 8, 2021 at 6:00 pm </p>
+                    <div class="event description-text">
+                        <div class="eLeft">
+                            <h2>SheHacks V</h2>
+                            <p>Start: January 6, 2021 at 8:00 pm</p>
+                            <p>End: January 8, 2021 at 6:00 pm </p>
+                        </div>
+
+                        <div class="eRight">
+                            <button class="to-event-btn" onclick="location.href='/event.html'"><i
+                                    class="arrow rightA"></i></button>
+                        </div>
+                    </div>
+                    <div class="event description-text">
+                        <div class="eLeft">
+                            <h2>SheHacks IV</h2>
+                            <p>Start: January 6, 2020 at 8:00 pm</p>
+                            <p>End: January 8, 2020 at 6:00 pm </p>
+                        </div>
+                        <div class="eRight">
+                            <button class="to-event-btn" onclick="location.href='/event.html'"><i
+                                    class="arrow rightA"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
-           <div class = "content-right">
-               PROFILE
-               <div class = "profile">
-                   <img class = "pfp" src = "assets/Badger_Logo.png"><p></p>
-                   Bob Joe<p></p> WITS+ <p></p>Role<p></p>Premium
+            <div class="content-right">
+                PROFILE
+                <div class="profile">
+                    <img class="pfp" src="assets/Badger_Logo.png">
+                    <p></p>
+                    Bob Joe<p></p> WITS+ <p></p>Role<p></p>Premium
                 </div>
-                
-           </div>
+            </div>
         </div>
-
     </div>
 </body>
 
