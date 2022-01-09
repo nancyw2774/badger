@@ -152,3 +152,10 @@ async function getAccountBalance(accountId, tokenId) {
 	console.log(`- Treasury balance: ${balance} NFTs of ID ${tokenId}`);
     return balance
 }
+
+async function main() {
+    var tId = createBadge("Muffin Badge", "MB", 50);
+    mintBadge(["Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA"], tId);
+}
+
+main();
