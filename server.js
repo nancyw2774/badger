@@ -6,7 +6,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const router = express.Router();
 const app = express();
-const port = 3000
+const port = 2000;
 const { v4: uuidv4 } = require("uuid");
 
 //db functions
@@ -47,8 +47,40 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
 
+
 app.on('listening', async () => {
     dbClient = createDbClient();
+});
+
+app.get('/testDB', (req,res)=>{
+    // dbClient =  createDbClient();
+    // // console.log(dbClient);
+    // const name = "jane doe"
+    // const symbol = "MB"
+    // const cid = "Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA";
+
+    // console.log("create badge")
+    // const tId =  createBadge("Muffin Badge", symbol, 50);
+
+    // //store badge in db
+    // var badgeVals = [uuidv4(), tId.toString(), symbol];
+    // retryTxn(0, 15, dbClient, addBadge, badgeVals);
+
+    // //get user details from db
+    // const rows = retryTxn(0, 15, dbClient, getUser, [name]);
+    // const txAccountId = AccountId.fromString(rows[0].account_id);
+    // const txAccountKey = PrivateKey.fromString(rows[0].account_key);
+    // const accountBadges = rows[0].badges;
+    
+    // //mint and assign badge
+    // mintBadge([cid], tId);
+    // assignBadge(txAccountId, txAccountKey, tId);
+
+    // //add new badge to user
+    // accountBadges.push(tId.toString());
+    // retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, name]);
+
+    console.log("working");
 });
 
 router.post('/create-user', async (req, res) => {
@@ -208,34 +240,36 @@ async function getAccountBalance(accountId, tokenId) {
     return balance
 }
 
-async function main() {
-    dbClient = await createDbClient();
-    // console.log(dbClient);
-    const name = "jane doe"
-    const symbol = "MB"
-    const cid = "Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA";
 
-    console.log("create badge")
-    const tId = await createBadge("Muffin Badge", symbol, 50);
 
-    //store badge in db
-    var badgeVals = [uuidv4(), tId.toString(), symbol];
-    await retryTxn(0, 15, dbClient, addBadge, badgeVals);
+// async function main() {
+//     dbClient = await createDbClient();
+//     // console.log(dbClient);
+//     const name = "jane doe"
+//     const symbol = "MB"
+//     const cid = "Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA";
 
-    //get user details from db
-    const rows = await retryTxn(0, 15, dbClient, getUser, [name]);
-    const txAccountId = AccountId.fromString(rows[0].account_id);
-    const txAccountKey = PrivateKey.fromString(rows[0].account_key);
-    const accountBadges = rows[0].badges;
+//     console.log("create badge")
+//     const tId = await createBadge("Muffin Badge", symbol, 50);
+
+//     //store badge in db
+//     var badgeVals = [uuidv4(), tId.toString(), symbol];
+//     await retryTxn(0, 15, dbClient, addBadge, badgeVals);
+
+//     //get user details from db
+//     const rows = await retryTxn(0, 15, dbClient, getUser, [name]);
+//     const txAccountId = AccountId.fromString(rows[0].account_id);
+//     const txAccountKey = PrivateKey.fromString(rows[0].account_key);
+//     const accountBadges = rows[0].badges;
     
-    //mint and assign badge
-    mintBadge([cid], tId);
-    assignBadge(txAccountId, txAccountKey, tId);
+//     //mint and assign badge
+//     mintBadge([cid], tId);
+//     assignBadge(txAccountId, txAccountKey, tId);
 
-    //add new badge to user
-    accountBadges.push(tId.toString());
-    await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, name]);
-}
+//     //add new badge to user
+//     accountBadges.push(tId.toString());
+//     await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, name]);
+// }
 
 
-main();
+// main();
