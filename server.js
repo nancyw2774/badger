@@ -6,7 +6,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const router = express.Router();
 const app = express();
-const port = 2000;
+const port = 3000;
 const { v4: uuidv4 } = require("uuid");
 
 //db functions
