@@ -9,11 +9,6 @@ const app = express();
 const port = 3000
 const { v4: uuidv4 } = require("uuid");
 
-// configure express to user body-parser as middleware
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: false}));
-app.use(bodyParser.json());
-
 //db functions
 const createDbClient = require("./db.js").createDbClient;
 const addBadge = require("./db.js").addBadge;
@@ -45,11 +40,15 @@ const treasuryKey = PrivateKey.fromString(process.env.TREASURY_PV_KEY);
 const supplyKey = PrivateKey.generate();
 
 const hederaClient = Client.forTestnet().setOperator(operatorId, operatorKey);
-
 var dbClient;
 
+// configure express to user body-parser as middleware
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false}));
+app.use(bodyParser.json());
+
 app.on('listening', async () => {
-    dbClient = await createDbClient();
+    dbClient = createDbClient();
 });
 
 router.post('/create-user', async (req, res) => {
@@ -76,9 +75,9 @@ router.post('/create-badge', async (req, res) => {
     const tokenId = await createBadge(name, symbol, max);
 
     //store badge in db
-    var userVals = [uuidv4(), tokenId, symbol, name];
-    console.log("add token...");
-    await retryTxn(0, 15, dbClient, addBadge, userVals);
+    console.log("add badge...");
+    var badgeVals = [uuidv4(), tokenId.toString(), symbol];
+    await retryTxn(0, 15, dbClient, addBadge, badgeVals);
 
     res.status(200)
     res.send('created badge')
@@ -87,37 +86,31 @@ router.post('/create-badge', async (req, res) => {
 router.post('/assign-badge', async (req, res) => {
     // get request body fields
     const CID = req.body.cid;
-    const tokenId = TokenId.fromtString(req.body.tokenId);
+    const tokenId = TokenId.fromString(req.body.tokenId);
     const txAccountName = req.body.username;
 
     //get user details from db
     console.log("get user...");
     const rows = await retryTxn(0, 15, dbClient, getUser, [txAccountName]);
-    const txAccountId = TokenId.fromtString(rows[0].account_id);
-    const txAccountKey = TokenId.fromtString(rows[0].account_key);
+    const txAccountId = AccountId.fromString(rows[0].account_id);
+    const txAccountKey = PrivateKey.fromString(rows[0].account_key);
     const accountBadges = rows[0].badges;
 
-    //check account balances before transaction
-    var accountPreBalance = getAccountBalance(txAccountId, tokenId)
-    var treasuryPreBalance = getAccountBalance(treasuryId, tokenId)
+    try {
+        //assign badge to user
+        await mintBadge(CID, tokenId);
+        await assignBadge(txAccountId,txAccountKey,tokenId)
 
-    //assign badge to user
-    await mintBadge(CID, tokenId);
-    await assignBadge(txAccountId,txAccountKey,tokenId)
-
-    //check account balances after transaction
-    var accountPostBalance = getAccountBalance(txAccountId, tokenId)
-    var treasuryPostBalance = getAccountBalance(treasuryId, tokenId)
-
-    if (accountPostBalance == (accountPreBalance + 1) && treasuryPostBalance == (treasuryPreBalance - 1)){
         //add new badge to user
         console.log("update badges...");
-        accountBadges.push(tokenId);
+        accountBadges.push(tokenId.toString());
         await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, txAccountName]);
 
         res.status(200)
         res.send('assigned badge')
-    } else {
+    }
+    catch (err){
+        console.log(err)
         res.status(500)
         res.send('ERR: unable to assign badge')
     }
@@ -150,6 +143,11 @@ async function createBadge(name,symbol,max) {
     let badgeCreateRx = await badgeCreateSubmit.getReceipt(hederaClient);
     let tokenId = badgeCreateRx.tokenId;
     console.log(`- Created NFT with Token ID: ${tokenId} \n`);
+
+    // Check treasury account balance
+    let treasuryBal = await getAccountBalance(treasuryId, tokenId);
+    console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
+
     return tokenId;
 }
 
@@ -167,6 +165,10 @@ async function mintBadge(CID, tokenId) {
     //Get the transaction receipt information (serial number)
     let mintRx = await mintTxSubmit.getReceipt(hederaClient);
     console.log(`- Created NFT ${tokenId} with serial: ${mintRx.serials[0].low} \n`);
+
+    // Check treasury account balance
+    let treasuryBal = await getAccountBalance(treasuryId, tokenId);
+    console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
 }
 
 //Assigning badge
@@ -190,12 +192,51 @@ async function assignBadge(txAccountId,txAccountKey,tokenId) {
     let tokenTransferSubmit = await tokenTransferTx.execute(hederaClient);
     let tokenTransferRx = await tokenTransferSubmit.getReceipt(hederaClient);
     console.log(`\n- NFT transfer from Treasury to txAccount: ${tokenTransferRx.status} \n`);
+
+    // Check treasury account and txAccount balance
+    let treasuryBal = await getAccountBalance(treasuryId, tokenId);
+    let txAccBal = await getAccountBalance(txAccountId, tokenId);
+    console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
+    console.log(`TxAccount Balance: ${txAccBal} NFTs of ID ${tokenId}\n`);
 }
 
 //Get account balance
 async function getAccountBalance(accountId, tokenId) {
     var balanceCheckTx = await new AccountBalanceQuery().setAccountId(accountId).execute(hederaClient);
     var balance = balanceCheckTx.tokens._map.get(tokenId.toString())
-	console.log(`- Treasury balance: ${balance} NFTs of ID ${tokenId}`);
+	// console.log(`- Balance: ${balance} NFTs of ID ${tokenId}`);
     return balance
 }
+
+/*
+async function main() {
+    dbClient = await createDbClient();
+    // console.log(dbClient);
+    const name = "jane doe"
+    const symbol = "MB"
+    const cid = "Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA";
+
+    console.log("create badge")
+    const tId = await createBadge("Muffin Badge", symbol, 50);
+
+    //store badge in db
+    var badgeVals = [uuidv4(), tId.toString(), symbol];
+    await retryTxn(0, 15, dbClient, addBadge, badgeVals);
+
+    //get user details from db
+    const rows = await retryTxn(0, 15, dbClient, getUser, [name]);
+    const txAccountId = AccountId.fromString(rows[0].account_id);
+    const txAccountKey = PrivateKey.fromString(rows[0].account_key);
+    const accountBadges = rows[0].badges;
+    
+    //mint and assign badge
+    mintBadge([cid], tId);
+    assignBadge(txAccountId, txAccountKey, tId);
+
+    //add new badge to user
+    accountBadges.push(tId.toString());
+    await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, name]);
+}
+
+
+main();*/
