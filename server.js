@@ -7,10 +7,20 @@ const bodyParser = require("body-parser");
 const router = express.Router();
 const app = express();
 const port = 3000
+const { v4: uuidv4 } = require("uuid");
 
 // configure express to user body-parser as middleware
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
+
+//db functions
+const createDbClient = require("./db.js").createDbClient;
+const addBadge = require("./db.js").addBadge;
+const addUser = require("./db.js").addUser;
+const getUser = require("./db.js").getUser;
+const updateUserBadges = require("./db.js").updateUserBadges;
+const retryTxn = require("./db.js").retryTxn;
 
 /* hedera.js */
 const {
@@ -36,46 +46,78 @@ const testId = AccountId.fromString(process.env.TEST_ID);
 const testKey = PrivateKey.fromString(process.env.TEST_KEY);
 const supplyKey = PrivateKey.generate();
 
-console.log(process.env.TEST_ID);
-const client = Client.forTestnet().setOperator(operatorId, operatorKey);
+const hederaClient = Client.forTestnet().setOperator(operatorId, operatorKey);
 
+const dbClient = await createDbClient();
+
+router.post('/create-user', async (req, res) => {
+    // get request body fields
+    const name = req.body.name;
+    const id = req.body.id;
+    const key = req.body.key;
+
+    //add user to db
+    var userVals = [uuidv4(), id, key, name];
+    console.log("adding user...");
+    await retryTxn(0, 15, dbClient, addUser, userVals);
+
+    res.status(200)
+    res.send('added user')
+})
 
 router.post('/create-badge', async (req, res) => {
     // get request body fields
     const name = req.body.name;
     const symbol = req.body.symbol;
-    const max = req.body.max
+    const max = req.body.max;
 
     const tokenId = await createBadge(name, symbol, max);
 
-    //store token id in db
+    //store badge in db
+    var userVals = [uuidv4(), tokenId, symbol, name];
+    console.log("add token...");
+    await retryTxn(0, 15, dbClient, addBadge, userVals);
 
     res.status(200)
     res.send('created badge')
 })
 
-router.post('/transfer-badge', async (req, res) => {
+router.post('/assign-badge', async (req, res) => {
     // get request body fields
-    const CID = req.body.name;
+    const CID = req.body.cid;
     const tokenId = TokenId.fromtString(req.body.tokenId);
-    const txAccountId = TokenId.fromtString(req.body.accountId);
-    const txAccountKey = TokenId.fromtString(req.body.accountKey);
+    const txAccountName = req.body.username;
 
+    //get user details from db
+    console.log("get user...");
+    const rows = await retryTxn(0, 15, dbClient, getUser, [txAccountName]);
+    const txAccountId = TokenId.fromtString(rows[0].account_id);
+    const txAccountKey = TokenId.fromtString(rows[0].account_key);
+    const accountBadges = rows[0].badges;
+
+    //check account balances before transaction
     var accountPreBalance = getAccountBalance(txAccountId, tokenId)
     var treasuryPreBalance = getAccountBalance(treasuryId, tokenId)
 
+    //assign badge to user
     await mintBadge(CID, tokenId);
     await assignBadge(txAccountId,txAccountKey,tokenId)
 
+    //check account balances after transaction
     var accountPostBalance = getAccountBalance(txAccountId, tokenId)
     var treasuryPostBalance = getAccountBalance(treasuryId, tokenId)
 
     if (accountPostBalance == (accountPreBalance + 1) && treasuryPostBalance == (treasuryPreBalance - 1)){
+        //add new badge to user
+        console.log("update badges...");
+        accountBadges.push(tokenId);
+        await retryTxn(0, 15, dbClient, updateUserBadges, [accountBadges, txAccountName]);
+
         res.status(200)
-        res.send('transferred badge')
+        res.send('assigned badge')
     } else {
         res.status(500)
-        res.send('ERR: unable to transfer badge')
+        res.send('ERR: unable to assign badge')
     }
 })
 
@@ -96,14 +138,14 @@ async function createBadge(name,symbol,max) {
 		.setSupplyType(TokenSupplyType.Finite)
         .setMaxSupply(max)
         .setSupplyKey(supplyKey) //check what the supply key should be
-        .freezeWith(client);
+        .freezeWith(hederaClient);
 
     //Sign the transaction and submit to network
     let badgeCreateTxSign = await badgeCreate.sign(treasuryKey);
-    let badgeCreateSubmit = await badgeCreateTxSign.execute(client);
+    let badgeCreateSubmit = await badgeCreateTxSign.execute(hederaClient);
 
     //Get the transaction receipt information
-    let badgeCreateRx = await badgeCreateSubmit.getReceipt(client);
+    let badgeCreateRx = await badgeCreateSubmit.getReceipt(hederaClient);
     let tokenId = badgeCreateRx.tokenId;
     console.log(`- Created NFT with Token ID: ${tokenId} \n`);
 
@@ -119,14 +161,14 @@ async function mintBadge(CID, tokenId) {
     let mintTx = await new TokenMintTransaction()
         .setTokenId(tokenId)
         .setMetadata([Buffer.from(CID)])
-        .freezeWith(client);
+        .freezeWith(hederaClient);
     
     //Sign the transaction and submit to network
     let mintTxSign = await mintTx.sign(supplyKey);
-    let mintTxSubmit = await mintTxSign.execute(client);
+    let mintTxSubmit = await mintTxSign.execute(hederaClient);
 
     //Get the transaction receipt information (serial number)
-    let mintRx = await mintTxSubmit.getReceipt(client);
+    let mintRx = await mintTxSubmit.getReceipt(hederaClient);
     console.log(`- Created NFT ${tokenId} with serial: ${mintRx.serials[0].low} \n`);
 
     // Check treasury account balance
@@ -140,20 +182,20 @@ async function assignBadge(txAccountId,txAccountKey,tokenId) {
     let associateTx = await new TokenAssociateTransaction()
 		.setAccountId(txAccountId)
 		.setTokenIds([tokenId])
-		.freezeWith(client)
+		.freezeWith(hederaClient)
 		.sign(txAccountKey);
 
-    let associateTxSubmit = await associateTx.execute(client);
-    let associateRx = await associateTxSubmit.getReceipt(client);
+    let associateTxSubmit = await associateTx.execute(hederaClient);
+    let associateRx = await associateTxSubmit.getReceipt(hederaClient);
     console.log(`- NFT association with txAccount: ${associateRx.status}\n`);
 
     //Transfer badge from treasury to txAccount
 	let tokenTransferTx = await new TransferTransaction()
 		.addNftTransfer(tokenId, 1, treasuryId, txAccountId)
-		.freezeWith(client)
+		.freezeWith(hederaClient)
 		.sign(treasuryKey);
-    let tokenTransferSubmit = await tokenTransferTx.execute(client);
-    let tokenTransferRx = await tokenTransferSubmit.getReceipt(client);
+    let tokenTransferSubmit = await tokenTransferTx.execute(hederaClient);
+    let tokenTransferRx = await tokenTransferSubmit.getReceipt(hederaClient);
     console.log(`\n- NFT transfer from Treasury to txAccount: ${tokenTransferRx.status} \n`);
 
     // Check treasury account and txAccount balance
@@ -165,7 +207,7 @@ async function assignBadge(txAccountId,txAccountKey,tokenId) {
 
 //Get account balance
 async function getAccountBalance(accountId, tokenId) {
-    var balanceCheckTx = await new AccountBalanceQuery().setAccountId(accountId).execute(client);
+    var balanceCheckTx = await new AccountBalanceQuery().setAccountId(accountId).execute(hederaClient);
     var balance = balanceCheckTx.tokens._map.get(tokenId.toString())
 	// console.log(`- Balance: ${balance} NFTs of ID ${tokenId}`);
     return balance
