@@ -47,6 +47,18 @@ body {
   margin: 10px 0px 25px 0px;
 }
 
+.to-event-btn {
+  width: 50px;
+  height: 50px;
+  background-color: #AA4465;
+  float: right;
+  border: none;
+  align-items: center;
+  border-radius: 30px;
+  margin-top: 15px;
+}
+
+
 .header {
   align-items: center;
   background: #93E1D8;
@@ -149,7 +161,7 @@ body {
 }
 
 .account-content{
-  position: relative;
+position: relative;
 width: 100%;
 height: 100%;
 background-color: #FFA69E;
@@ -199,6 +211,74 @@ display: block;
   margin-bottom: 10px;
 }
 
+.event-content{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #FFA69E;
+}
+
+.eContent-left{
+  float: left;
+  width: 50%;
+  display: block;
+}
+
+.eContent-right{
+  float: right;
+  width: 50%;
+  display: block;
+}
+
+.banner{ 
+  width: 100%;
+  height: 20px;
+  
+}
+
+.prize-block{
+  width:95%;
+  height:480px;
+  border-radius: 10px;
+  padding: 10px;
+  background-color: #AA4465;
+  overflow-y: scroll;
+  margin: 10px 0px 25px 0px;
+}
+
+.user-block{
+  width:95%;
+  height:480px;
+  border-radius: 10px;
+  padding: 10px;
+  background-color: #AA4465;
+  overflow-y: scroll;
+  margin: 10px 0px 25px 0px;
+}
+
+.user{
+  width: 99%;
+  height: 75px;
+  border-radius: 10px;
+  background-color: #bdbdbd;
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.eLeft{
+  float: left;
+  width: 70%;
+  text-align: left;
+  
+}
+
+.eRight {
+  align-items: center;
+  float: right;
+  text-align: right;
+}
+
 .pfp{
   width: 200px;
   height: 200px;
@@ -226,4 +306,17 @@ display: block;
 
 #go-to-link:hover {
   color:#696969;
+}
+
+.arrow {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+  
+}
+
+.rightA{
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
 }
