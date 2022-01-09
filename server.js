@@ -54,9 +54,9 @@ router.post('/create-badge', async (req, res) => {
 router.post('/transfer-badge', async (req, res) => {
     // get request body fields
     const CID = req.body.name;
-    const tokenId = TokenId.fromString(req.body.tokenId);
-    const txAccountId = TokenId.fromString(req.body.accountId);
-    const txAccountKey = TokenId.fromString(req.body.accountKey);
+    const tokenId = TokenId.fromtString(req.body.tokenId);
+    const txAccountId = TokenId.fromtString(req.body.accountId);
+    const txAccountKey = TokenId.fromtString(req.body.accountKey);
 
     var accountPreBalance = getAccountBalance(txAccountId, tokenId)
     var treasuryPreBalance = getAccountBalance(treasuryId, tokenId)
@@ -149,12 +149,12 @@ async function assignBadge(txAccountId,txAccountKey,tokenId) {
 async function getAccountBalance(accountId, tokenId) {
     var balanceCheckTx = await new AccountBalanceQuery().setAccountId(accountId).execute(client);
     var balance = balanceCheckTx.tokens._map.get(tokenId.toString())
-	console.log(`- Treasury balance: ${balance} NFTs of ID ${tokenId}`);
+	console.log(`- Balance: ${balance} NFTs of ID ${tokenId}`);
     return balance
 }
 
 async function main() {
-    var tId = createBadge("Muffin Badge", "MB", 50);
+    let tId = await createBadge("Muffin Badge", "MB", 50);
     mintBadge(["Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA"], tId);
 }
 
