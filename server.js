@@ -32,8 +32,11 @@ const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
 const operatorKey = PrivateKey.fromString(process.env.OPERATOR_PV_KEY);
 const treasuryId = AccountId.fromString(process.env.TREASURY_ID);
 const treasuryKey = PrivateKey.fromString(process.env.TREASURY_PV_KEY);
+const testId = AccountId.fromString(process.env.TEST_ID);
+const testKey = PrivateKey.fromString(process.env.TEST_KEY);
 const supplyKey = PrivateKey.generate();
 
+console.log(process.env.TEST_ID);
 const client = Client.forTestnet().setOperator(operatorId, operatorKey);
 
 
@@ -103,6 +106,11 @@ async function createBadge(name,symbol,max) {
     let badgeCreateRx = await badgeCreateSubmit.getReceipt(client);
     let tokenId = badgeCreateRx.tokenId;
     console.log(`- Created NFT with Token ID: ${tokenId} \n`);
+
+    // Check treasury account balance
+    let treasuryBal = await getAccountBalance(treasuryId, tokenId);
+    console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
+
     return tokenId;
 }
 
@@ -120,6 +128,10 @@ async function mintBadge(CID, tokenId) {
     //Get the transaction receipt information (serial number)
     let mintRx = await mintTxSubmit.getReceipt(client);
     console.log(`- Created NFT ${tokenId} with serial: ${mintRx.serials[0].low} \n`);
+
+    // Check treasury account balance
+    let treasuryBal = await getAccountBalance(treasuryId, tokenId);
+    console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
 }
 
 //Assigning badge
@@ -143,19 +155,26 @@ async function assignBadge(txAccountId,txAccountKey,tokenId) {
     let tokenTransferSubmit = await tokenTransferTx.execute(client);
     let tokenTransferRx = await tokenTransferSubmit.getReceipt(client);
     console.log(`\n- NFT transfer from Treasury to txAccount: ${tokenTransferRx.status} \n`);
+
+    // Check treasury account and txAccount balance
+    let treasuryBal = await getAccountBalance(treasuryId, tokenId);
+    let txAccBal = await getAccountBalance(testId, tokenId);
+    console.log(`Treasury Account Balance: ${treasuryBal} NFTs of ID ${tokenId}`);
+    console.log(`TxAccount Balance: ${txAccBal} NFTs of ID ${tokenId}\n`);
 }
 
 //Get account balance
 async function getAccountBalance(accountId, tokenId) {
     var balanceCheckTx = await new AccountBalanceQuery().setAccountId(accountId).execute(client);
     var balance = balanceCheckTx.tokens._map.get(tokenId.toString())
-	console.log(`- Balance: ${balance} NFTs of ID ${tokenId}`);
+	// console.log(`- Balance: ${balance} NFTs of ID ${tokenId}`);
     return balance
 }
 
 async function main() {
     let tId = await createBadge("Muffin Badge", "MB", 50);
     mintBadge(["Qmc7rh6UsAvJfxt51mkpXpPBGAfmZQxw75BMcU19LeF9DA"], tId);
+    assignBadge(testId, testKey, tId);
 }
 
 main();
