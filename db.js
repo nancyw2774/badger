@@ -23,7 +23,7 @@ async function retryTxn(n, max, client, operation, params) {
                 return
         } catch (err) {
         if (err.code !== "40001") {
-            return callback(err);
+            return cb(err);
         } else {
             console.log("Transaction failed. Retrying transaction.");
             console.log(err.message);
@@ -52,8 +52,8 @@ function cb(err, res) {
 // badge functions
 async function addBadge(client, params, callback) {
 
-    const insertStatement = "INSERT INTO badges (id, account_id, account_key, username) VALUES ($1, $2, $3, $4);";
-    await client.query(deleteStatement, params, callback);
+    const insertStatement = "INSERT INTO badges (id, token_id, token_symbol) VALUES ($1, $2, $3);";
+    await client.query(insertStatement, params, callback);
   
     const selectBadgeStatement = "SELECT token_id, token_symbol FROM badges;";
     await client.query(selectBadgeStatement, callback);
@@ -101,18 +101,18 @@ async function updateUserBadges(client, params, callback) {
 //create connection with db
 async function createDbClient() {
     prompt.start();
-    const URI = await prompt.get("connectionString");
+    const URI = process.env.DB_CONNECTION_STRING;
     var connectionString;
     // Expand $env:appdata environment variable in Windows connection string
-    if (URI.connectionString.includes("env:appdata")) {
-        connectionString = await URI.connectionString.replace(
+    if (URI.includes("env:appdata")) {
+        connectionString = await URI.replace(
         "$env:appdata",
         process.env.APPDATA
         );
     }
     // Expand $HOME environment variable in UNIX connection string
-    else if (URI.connectionString.includes("HOME")){
-        connectionString = await URI.connectionString.replace(
+    else if (URI.includes("HOME")){
+        connectionString = await URI.replace(
         "$HOME",
         process.env.HOME
         );
